@@ -1,0 +1,9 @@
+"""
+Swagger UI에 접근하는 경로를 변경
+기본 경로 : http://localhost:8080/swagger-ui/index.html
+해당 설정 시 : http://localhost:8080/api/swagger
+>> 단, 내부적으로는 여전히 /swagger-ui/index.html로 매핑되며, 이 설정은 접속을 리다이렉트 해주는 역할
+"""
+springdoc:
+  swagger-ui:
+    path: /api/swagger
