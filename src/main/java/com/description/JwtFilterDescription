@@ -1,0 +1,83 @@
+1. GrantedAuthority (interface)
+    > 사용자가 가지고 있는 권한(역할)을 Spring Security 방식에 맞게 포맷팅
+    > 이 인터페이스를 구현한 객체가, 현재 사용자가 어떤 권한을 가지고 있는지 표현
+
+    ✅ Example
+        GrantedAuthority admin = new SimpleGrantedAuthority("ROLE_ADMIN");
+
+    ✨정석✨
+        List<GrantedAuthority> authorities =
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
+
+        👉🏻 기본 사용 방식은 단일 권한! 즉, 권한 객체 하나만 생성
+        👉🏻 정석은 GrantedAuthority 객체를 리스트에 담아 인증 객체에 넘기기 위한 용도
+            UsernamePasswordAuthenticationToken는 Collection<? extends GrantedAuthority>를 받기 때문에 리스트로 넘기는 게 맞음
+
+    ✅ 다중 권한을 가질 경우
+        List<GrantedAuthority> authorities = Arrays.asList(
+            new SimpleGrantedAuthority("ROLE_USER"),
+            new SimpleGrantedAuthority("ROLE_MANAGER")
+        );
+
+    ❓ 왜 "ROLE_"을 붙이나?
+        @PreAuthorize("hasRole('ADMIN')") 같은 권한 체크가 내부적으로 ROLE_ADMIN을 찾기 때문
+        hasAuthority("ROLE_ADMIN")처럼 직접 쓸 수도 있지만, hasRole() 사용하려면 prefix 필수
+
+
+2. SimpleGrantAuthority (Spring 내장 구현체)
+    > GrantedAuthority 인터페이스의 가장 간단한 구현체로 생성자에 문자열 하나 넘기면 그게 곧 권한값
+
+    ✅ Example
+        GrantedAuthority userRole = new SimpleGrantedAuthority("ROLE_USER");
+
+3. Collections.singletonList
+    > Java Util Class Collection의 정적 메서드로, 요소가 하나뿐인 불변 리스트를 만들어줌
+
+    ❓왜 사용하나?
+        👉🏻 인증 객체가 권한 리스트 Collection<GrantedAuthority>를 요구하니까!
+        👉🏻 단일 권한일 때 new ArrayList<>() 대신 더 간단하고 안전하게 리스트 생성 가능
+            ✅ Example
+                List<GrantedAuthority> roles = Collections.singletonList("ROLE_USER");
+                // roles → ["ROLE_USER"]
+
+ ✨ List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
+
+4. UsernamePasswordAuthenticationToken (Authentication 인터페이스의 대표적인 구현체)
+    > Spring Security에서 인증된 사용자를 나타내는 객체
+
+     ✅ 생성자
+        UsernamePasswordAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities)
+        파라미터
+        principal : 인증된 사용자 식별값 (보통 email, userId, 또는 UserDetails 객체)
+        credentials : 비밀번호 (JWT 기반 인증에서는 null)
+        authorities : 권한 리스트
+
+     ✅ Example
+        new UsernamePasswordAuthenticationToken("user@email.com", null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+
+
+5. SecurityContextHolder.getContext().setAuthentication(auth);
+    > Spring Security의 보안 컨텍스트 저장소에 현재 사용자의 인증 정보를 등록함 (인증 객체를 현재 요청에 등록)
+    > 등록하면 이후에 @AuthenticationPrincipal, authentication.getPrincipal() 등으로 정보 접근 가능
+
+    ‼️SecurityContextHolder는 내부적으로 ThreadLocal 기반이기 때문에, 요청 단위로 격리된 인증 상태를 유지
+
+    ✅ Example
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    → 이후 컨트롤러에서
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = (String) auth.getPrincipal();
+
+
+6. objectMapper.writeValueAsString
+    > objectMapper : Java 객체 ↔ JSON 변환 담당
+        → @RestController가 자동으로 응답을 JSON으로 만드는 것도 내부적으로 이걸 사용함
+
+    > writeValueAsString : Java 객체를 JSON 문자열로 직렬화(serialize)해주는 메서드
+       ‼️String json = objectMapper.writeValueAsString(someDto);
+       → 내부적으로
+        new ObjectMapper().writeValueAsString(new ResponseDto<>(...))
+
+    ❓왜 직접 써야 하나?
+        👉🏻 일반적으로 Controller에서는 Spring이 JSON 변환을 해줌 (@RestController)
+        👉🏻 Filter 단계에서는 직접 JSON 문자열로 변환해서 출력해주지 않으면 클라이언트는 HTML이나 빈 응답을 받을 수도 있음

@@ -7,3 +7,15 @@ Swagger UI에 접근하는 경로를 변경
 springdoc:
   swagger-ui:
     path: /api/swagger
+
+
+"""
+JWT
+Sping Bean으로 등록되어 있기 때문에 Token value, Token Expiration Time을 application.yml에 등록하여 숨김 가능
+> 해당 Value는 @Value로 가져오면 됨!
+"""
+security:
+  jwt:
+    token:
+      secret-key: {긴 임의의 토큰 문자열}
+      expiration-time: 3600000	// 1시간 (ms단위)
