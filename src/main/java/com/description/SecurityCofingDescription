@@ -1,0 +1,39 @@
+1. public class SecurityConfig (extends WebSecurityConfigurerAdapter)
+    > extends WebSecurityConfigurerAdapter 상속 받는 경우는 옛날 방식 : boot 2.5 이하
+
+    ✅ 비교를 해보자!
+    <extends WebSecurityConfigurerAdapter>
+
+        @Configuration
+        @EnableWebSecurity
+        public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+            @Override
+            protected void configure(HttpSecurity http) throw Exception {
+                http
+                    .csrf().disable()
+                    .authorizeRequest()
+                        .antMatcher("api/auth/**").permitAll()
+                        .anyRequest().authenticated();
+            }
+        }
+
+        👉 구조가 명확하고 이해하기 쉽지만 Spring 내부에 숨겨진 Bean 설정이 많아서 커스터마이징 어려움
+
+    <public class Security>
+
+        @Configuration
+        @EnableWebSecurity
+        public class SecurityConfig {
+
+            @Bean
+            public SecurityFilterChain filterChain(HttpSecurity http) throw Exception {
+                return http
+                    .csrf(csrf -> csrf.disable())
+                    .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("api/auth/**").permitAll()
+                        .anyRequest().authenticated()
+                    )
+                    .build();
+            }
+        👉 Bean 기반으로 확장성과 테스트가 용이하고 람다식 DSL사용으로 간결하고 직관적임
