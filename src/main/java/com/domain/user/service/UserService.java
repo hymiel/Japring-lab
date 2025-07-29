@@ -3,6 +3,7 @@ package com.domain.user.service;
 import com.domain.user.dto.SignupRequestDto;
 import com.domain.user.dto.UpdateUserRequestDto;
 import com.domain.user.entity.User;
+import com.domain.user.exception.UserNotFoundException;
 import com.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,7 +42,7 @@ public class UserService {
 
     public void updateUser(String username, UpdateUserRequestDto updateUserRequestDto){
         User user = userRepository.findByUsername(username)
-                .orElseThrow(()->new IllegalArgumentException("사용자가 존재하지 않습니다."));
+                .orElseThrow(()->new UserNotFoundException("사용자가 존재하지 않습니다."));
         if (updateUserRequestDto.getEmail() != null) {
             user.updateEmail(updateUserRequestDto.getEmail());
         }
