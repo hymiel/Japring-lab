@@ -19,7 +19,7 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    private String name;
+    private String username;
 
     private String password;
 
@@ -28,10 +28,18 @@ public class User {
 
 
     @Builder
-    public User(String email, String name, String password, Role role) {
+    public User(String email, String username, String password, Role role) {
         this.email = email;
-        this.name = name;
+        this.username = username;
         this.password = password;
         this.role = role;
+    }
+
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+    public void updateEmail(String newEmail){
+        this.email = newEmail;
     }
 }
